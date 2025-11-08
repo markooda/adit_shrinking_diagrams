@@ -25,7 +25,15 @@ jobs:
           echo "✅ Token is set (not showing for security)."
           echo "Testing curl request formatting..."
           echo '[{"op":"add","path":"/fields/System.State","value":"Doing"}]'
-        
+
+      - name: Test Azure DevOps API connectivity
+        env:
+          AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
+        run: |
+          echo "Testing Azure DevOps connectivity..."
+          curl -v --fail \
+            -H "Authorization: Basic $(echo -n ":${AZURE_DEVOPS_PAT}" | base64)" \
+            "https://dev.azure.com/teamok/Shrinking%20diagrams/_apis/wit/workitems/44?api-version=7.0"
 
       - name: Extract task number
         id: extract
