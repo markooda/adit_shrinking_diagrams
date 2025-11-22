@@ -39,6 +39,30 @@ pip install -r requirements.txt
 
 This installs FastAPI, Uvicorn, and other utilities listed in `requirements.txt`.
 
+## Apply database migrations
+
+This project uses SQLite and Alembic for database migrations.
+The database file (app.db) is not stored in Git, so each developer must create it locally.
+After installing dependencies, from the repository root run:
+
+```bash
+cd backend
+alembic upgrade head
+```
+
+This will:
+- create the local app.db database
+- apply all migration files from alembic/versions/
+- create all tables (including users)
+- add the default admin user if a migration exists for it
+
+If you ever switch branches and see database-related errors (e.g. “no such table: users”), simply reset the database:
+
+```bash
+rm app.db
+alembic upgrade head
+```
+
 ## Run the development server
 
 Start the FastAPI application with Uvicorn:
@@ -73,3 +97,40 @@ When you are done working on the backend, deactivate the virtual environment wit
 ```bash
 deactivate
 ```
+
+## Creating a New Migration (when adding new tables or fields)
+
+If you modify SQLAlchemy models (for example, add a new table or add a new column), you must create a new Alembic migration and apply it.
+Follow these steps:
+
+### 1. Make your changes in the models
+
+Edit or create a model inside:
+```
+backend/app/models/
+```
+Example: create a new table Project in project.py.
+
+### 2. Generate a new migration file
+From the backend directory:
+```
+cd backend
+alembic revision --autogenerate -m "add Project table"
+```
+Alembic will compare your models with the current database and create a migration file under:
+```
+backend/alembic/versions/
+```
+
+### 3. Review the migration file
+Open the generated file and verify that:
+- the new table creation is included
+- or new columns appear correctly
+- no unexpected operations were added
+
+### 4. Apply the migration
+After confirming the migration looks correct, run:
+```
+alembic upgrade head
+```
+This updates your local app.db with the new table.
