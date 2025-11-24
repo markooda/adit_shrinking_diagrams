@@ -9,12 +9,14 @@ from app.services.openai_service import OpenAIService
 from app.services.parse_puml_service import PUMLParser
 from app.services.kruskals_algorithm import Graph
 
-from fastapi import Depends
+from fastapi import Depends, status
 from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.models.user import User
-from app.schemas.user import UserListItem
+from app.schemas.user import UserListItem, UserRegister, UserResponse
+
+from app.services.security_service import hash_password
 
 app = FastAPI()
 logger.log("Starting FastAPI", level="info")
@@ -137,3 +139,14 @@ def process_puml(file: UploadFile):
 @app.get("/users", response_model=list[UserListItem])
 def get_users(db: Session = Depends(get_db)):
     return db.query(User).all()
+
+@app.post("/auth/register", response_model=UserResponse, status_code=201)
+def register_user(user_data: UserRegister, db: Session = Depends(get_db)):
+    existing_user = db.query(User).filter(User.email == user_data.email).first()
+    if existing_user:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email is already registered")
+    user = User(email=user_data.email, password_hash=hash_password(user_data.password))
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
