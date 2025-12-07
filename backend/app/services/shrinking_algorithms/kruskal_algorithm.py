@@ -124,7 +124,6 @@ class KruskalsAlgorithm(ShrinkingAlgorithm):
         while i < len(self.edges):
             u, v, weight = self.edges[i]
             i += 1
-
             x = self.find(parent, u)
             y = self.find(parent, v)
             if x != y:
@@ -135,6 +134,15 @@ class KruskalsAlgorithm(ShrinkingAlgorithm):
 
     def extract_solution(self, sol):
         edges = []
+        
+        edge_lookup = {}
+        for edge in self.PUML["edges"]:
+            source = edge["source"]
+            target = edge["target"]
+            u = self.PUML["classes"][source]["id"]
+            v = self.PUML["classes"][target]["id"]
+            edge_lookup[(u, v)] = edge
+            edge_lookup[(v, u)] = edge
 
         edge_lookup = {}
         for edge in self.PUML["edges"]:
